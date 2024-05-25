@@ -1,0 +1,17 @@
+{
+  "stand.rotp_metallica.metallica": "Metallica",
+
+  "action.rotp_metallica.invisibility": "Invisibility",
+  "action.rotp_metallica.metallica_single_knife_throw": "Throw a knife",
+  "action.rotp_metallica.heal": "Heal",
+  "action.rotp_metallica.metallica_multiple_knives_throw": "Throw 5 knives",
+  "action.rotp_metallica.create_blades_in_victim": "Create blades in victim",
+
+  "effect.rotp_metallica.lack_of_iron": "Lack of iron",
+
+  "rotp_metallica.subtitle.risotto_nero_metallica": "\"Metallica\"",
+  "rotp_metallica.subtitle.risotto_nero_invisibility": "\"How about this?\"",
+  "rotp_metallica.subtitle.risotto_nero_create_blades_in_victim": "\"Take this! Metallica!\"",
+  "rotp_metallica.subtitle.heal": "Iron heal",
+  "rotp_metallica.subtitle.metallica_summon_stand": "Metallica stand summoned"
+}

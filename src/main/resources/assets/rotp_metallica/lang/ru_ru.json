@@ -1,0 +1,17 @@
+{
+  "stand.rotp_metallica.metallica": "Metallica",
+
+  "action.rotp_metallica.invisibility": "Невидимость",
+  "action.rotp_metallica.metallica_single_knife_throw": "Метнуть нож",
+  "action.rotp_metallica.heal": "Исцелить себя",
+  "action.rotp_metallica.metallica_multiple_knives_throw": "Метнуть 5 ножей",
+  "action.rotp_metallica.create_blades_in_victim": "Создать ножи внутри жертвы",
+
+  "effect.rotp_metallica.lack_of_iron": "Недостаток железа",
+
+  "rotp_metallica.subtitle.risotto_nero_metallica": "\"Metallica\"",
+  "rotp_metallica.subtitle.risotto_nero_invisibility": "\"Как тебе такое?\"",
+  "rotp_metallica.subtitle.risotto_nero_create_blades_in_victim": "\"Получай! Metallica!\"",
+  "rotp_metallica.subtitle.heal": "Исцеление железом",
+  "rotp_metallica.subtitle.metallica_summon_stand": "Стенд Metallica призван"
+}
