@@ -33,7 +33,7 @@ public class InitStands {
         new Heal(((new StandEntityAction.Builder())).standSound(InitSounds.HEAL).staminaCost(200.0F).cooldown(300).resolveLevelToUnlock(4)));
 
     public static final RegistryObject<VictimBladeCreation> VICTIM_BLADES_CREATION = ACTIONS.register("create_blades_in_victim", () ->
-        new VictimBladeCreation(((new StandEntityAction.Builder())).staminaCostTick(10.0F).cooldown(300)
+        new VictimBladeCreation(((new StandEntityAction.Builder())).staminaCostTick(6.5F).cooldown(300)
                 .standSound(StandEntityAction.Phase.PERFORM, InitSounds.CREATE_BLADES_IN_VICTIM)
                 .resolveLevelToUnlock(2).holdType(100)));
 

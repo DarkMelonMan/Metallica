@@ -6,6 +6,7 @@ import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandEntityTask;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.projectile.AbstractArrowEntity;
 import net.minecraft.world.World;
 
 
@@ -19,6 +20,7 @@ public class MultipleKnivesThrow extends StandEntityAction {
             LivingEntity user = userPower.getUser();
             for (int i = 0; i < 5; i++) {
                 KnifeEntity knife = new KnifeEntity(world, user);
+                knife.pickup = AbstractArrowEntity.PickupStatus.DISALLOWED;
                 knife.setTimeStopFlightTicks(5);
                 knife.shootFromRotation(user, 3F,1.0F + i % 3);
                 world.addFreshEntity(knife);

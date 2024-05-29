@@ -7,6 +7,7 @@ import com.github.standobyte.jojo.entity.stand.StandEntity;
 import com.github.standobyte.jojo.entity.stand.StandEntityTask;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.projectile.AbstractArrowEntity;
 import net.minecraft.world.World;
 public class SingleKnifeThrow extends StandEntityAction {
     public SingleKnifeThrow(Builder builder) {
@@ -17,6 +18,7 @@ public class SingleKnifeThrow extends StandEntityAction {
         if (!world.isClientSide()) {
             LivingEntity user = userPower.getUser();
             KnifeEntity knife = new KnifeEntity(world, user);
+            knife.pickup = AbstractArrowEntity.PickupStatus.DISALLOWED;
             knife.setTimeStopFlightTicks(5);
             knife.shootFromRotation(user, 3F,1.0F);
             world.addFreshEntity(knife);
