@@ -1,11 +1,14 @@
 package ru.unclestalin.rotp_metallica.potion;
 
+import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.potion.IApplicableEffect;
 import com.github.standobyte.jojo.potion.UncurableEffect;
+import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
 import com.github.standobyte.jojo.util.mc.damage.DamageUtil;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.EffectType;
 import net.minecraftforge.common.ForgeMod;
 
@@ -21,6 +24,9 @@ public class LackOfIron extends UncurableEffect implements IApplicableEffect {
     public void applyEffectTick(@Nonnull LivingEntity livingEntity, int amplifier) {
         if (!livingEntity.level.isClientSide){
             DamageUtil.suffocateTick(livingEntity, 0.01F);
+            if (livingEntity instanceof PlayerEntity && INonStandPower.getPlayerNonStandPower((PlayerEntity)livingEntity).getType() == ModPowers.VAMPIRISM.get()){
+                INonStandPower.getPlayerNonStandPower((PlayerEntity)livingEntity).consumeEnergy(2.5F);
+            }
         }
     }
 
