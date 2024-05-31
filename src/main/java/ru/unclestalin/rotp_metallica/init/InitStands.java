@@ -30,7 +30,7 @@ public class InitStands {
         new Invisibility(((new StandEntityAction.Builder()).holdType()).standWindupDuration(30).standSound(StandEntityAction.Phase.WINDUP, InitSounds.INVISIBILITY).staminaCost(200.0F).resolveLevelToUnlock(2).holdToFire(30, false)));
 
     public static final RegistryObject<Heal> HEAL_USER = ACTIONS.register("heal", () ->
-            new Heal(((new StandEntityAction.Builder())).standSound(InitSounds.HEAL).staminaCost(200.0F).cooldown(100).resolveLevelToUnlock(4)));
+            new Heal(((new StandEntityAction.Builder())).standSound(InitSounds.HEAL).staminaCost(200.0F).cooldown(150).resolveLevelToUnlock(4)));
 
     public static final RegistryObject<VictimBladeCreation> VICTIM_BLADES_CREATION = ACTIONS.register("create_blades_in_victim", () ->
         new VictimBladeCreation(((new StandEntityAction.Builder())).staminaCostTick(6.5F).cooldown(300)
