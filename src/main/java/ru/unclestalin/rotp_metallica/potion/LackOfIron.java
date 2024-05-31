@@ -25,7 +25,7 @@ public class LackOfIron extends UncurableEffect implements IApplicableEffect {
         if (!livingEntity.level.isClientSide){
             DamageUtil.suffocateTick(livingEntity, 0.01F);
             if (livingEntity instanceof PlayerEntity && INonStandPower.getPlayerNonStandPower((PlayerEntity)livingEntity).getType() == ModPowers.VAMPIRISM.get()){
-                INonStandPower.getPlayerNonStandPower((PlayerEntity)livingEntity).consumeEnergy(2.5F);
+                INonStandPower.getPlayerNonStandPower((PlayerEntity) livingEntity).consumeEnergy(1.5F);
             }
         }
     }
