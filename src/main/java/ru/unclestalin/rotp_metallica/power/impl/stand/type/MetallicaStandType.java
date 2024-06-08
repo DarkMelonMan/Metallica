@@ -54,11 +54,12 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
     public void tickUser(LivingEntity user, IStandPower power) {
         if (user.isAlive() && user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get())) {
             power.consumeStamina(4.5F, true);
-            if (power.getStamina() <= 0F)
+            if (power.getStamina() <= 0F || !power.isActive())
                 user.removeEffect(ModStatusEffects.FULL_INVISIBILITY.get());
         }
-        pullIron(user.level, user);
-        if (!user.level.isClientSide()) {
+        if (power.isActive())
+            pullIron(user.level, user);
+        if (!user.level.isClientSide() && power.isActive()) {
             World world = user.level;
             double x = user.getX();
             double y = user.getY();
