@@ -24,8 +24,14 @@ public class InitSounds {
     public static final RegistryObject<SoundEvent> USER_KNIVES_THROW = SOUNDS.register("risotto_nero_knives_throw",
             () -> new SoundEvent(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "risotto_nero_knives_throw")));
 
-    public static final RegistryObject<SoundEvent> INVISIBILITY = SOUNDS.register("risotto_nero_invisibility",
+    public static final RegistryObject<SoundEvent> USER_INVISIBILITY = SOUNDS.register("risotto_nero_invisibility",
             () -> new SoundEvent(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "risotto_nero_invisibility")));
+
+    public static final RegistryObject<SoundEvent> INVISIBILITY_ON = SOUNDS.register("metallica_invisibility_on",
+            () -> new SoundEvent(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "metallica_invisibility_on")));
+
+    public static final RegistryObject<SoundEvent> INVISIBILITY_OFF = SOUNDS.register("metallica_invisibility_off",
+            () -> new SoundEvent(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "metallica_invisibility_off")));
 
     public static final RegistryObject<SoundEvent> CREATE_BLADES_IN_VICTIM = SOUNDS.register("risotto_nero_create_blades_in_victim",
             () -> new SoundEvent(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "risotto_nero_create_blades_in_victim")));
@@ -33,13 +39,15 @@ public class InitSounds {
     public static final RegistryObject<SoundEvent> METALLICA_SUMMON_STAND = SOUNDS.register("metallica_summon_stand",
             () -> new SoundEvent(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "metallica_summon_stand")));
 
+    public static final RegistryObject<SoundEvent> METALLICA_UNSUMMON_STAND = SOUNDS.register("metallica_unsummon_stand",
+            () -> new SoundEvent(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "metallica_unsummon_stand")));
 
     public static final RegistryObject<SoundEvent> HEAL = SOUNDS.register("heal",
             () -> new SoundEvent(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "heal")));
 
     public static final Supplier<SoundEvent> STAND_SUMMON = METALLICA_SUMMON_STAND;
-    
-    public static final Supplier<SoundEvent> STAND_UNSUMMON = ModSounds.STAND_UNSUMMON_DEFAULT;
+
+    public static final Supplier<SoundEvent> STAND_UNSUMMON = METALLICA_UNSUMMON_STAND;
 
     static final OstSoundList METALLICA_OST = new OstSoundList(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "metallica_ost"), SOUNDS);
 

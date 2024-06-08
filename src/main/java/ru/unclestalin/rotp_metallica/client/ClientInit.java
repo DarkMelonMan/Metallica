@@ -1,6 +1,5 @@
 package ru.unclestalin.rotp_metallica.client;
 
-import com.github.standobyte.jojo.client.ClientEventHandler;
 import com.github.standobyte.jojo.client.playeranim.PlayerAnimationHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderer;

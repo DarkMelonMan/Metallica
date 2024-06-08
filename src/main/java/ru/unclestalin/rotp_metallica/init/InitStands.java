@@ -15,6 +15,7 @@ import com.github.standobyte.jojo.power.impl.stand.type.StandType;
 
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
+import ru.unclestalin.rotp_metallica.power.impl.stand.type.MetallicaStandType;
 
 import static com.github.standobyte.jojo.init.ModEntityTypes.ENTITIES;
 
@@ -27,7 +28,7 @@ public class InitStands {
 
 
     public static final RegistryObject<Invisibility> INVISIBILITY = ACTIONS.register("invisibility", () ->
-        new Invisibility(((new StandEntityAction.Builder()).holdType()).standWindupDuration(30).standSound(StandEntityAction.Phase.WINDUP, InitSounds.INVISIBILITY).staminaCost(200.0F).resolveLevelToUnlock(2).holdToFire(30, false)));
+            new Invisibility(((new StandEntityAction.Builder()).holdType()).standWindupDuration(30).standSound(StandEntityAction.Phase.WINDUP, InitSounds.USER_INVISIBILITY).standSound(StandEntityAction.Phase.WINDUP, InitSounds.INVISIBILITY_ON).standSound(StandEntityAction.Phase.WINDUP, InitSounds.INVISIBILITY_OFF).staminaCost(200.0F).resolveLevelToUnlock(2).holdToFire(30, false)));
 
     public static final RegistryObject<Heal> HEAL_USER = ACTIONS.register("heal", () ->
             new Heal(((new StandEntityAction.Builder())).standSound(InitSounds.HEAL).staminaCost(200.0F).cooldown(150).resolveLevelToUnlock(4)));
@@ -48,10 +49,10 @@ public class InitStands {
                     .standSound(StandEntityAction.Phase.WINDUP, ModSounds.KNIVES_THROW, InitSounds.USER_KNIVES_THROW)));
 
 
-    public static final EntityStandRegistryObject<EntityStandType<StandStats>, StandEntityType<MetallicaStandEntity>> METALLICA_STAND =
+    public static final EntityStandRegistryObject<MetallicaStandType<StandStats>, StandEntityType<MetallicaStandEntity>> METALLICA_STAND =
             new EntityStandRegistryObject<>("metallica",
                     STANDS,
-                    () -> new EntityStandType.Builder<>()
+                    () -> new MetallicaStandType.Builder<StandStats>()
                             .color(0x4C005B)
                             .storyPartName(StoryPart.GOLDEN_WIND.getName())
                             .leftClickHotbar(

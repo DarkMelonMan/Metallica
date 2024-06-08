@@ -27,7 +27,6 @@ public class RotpMetallicaAddon {
         InitStands.STANDS.register(modEventBus);
         InitEffects.EFFECTS.register(modEventBus);
     }
-
     public static Logger getLogger() {
         return LOGGER;
     }
