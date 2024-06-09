@@ -2,6 +2,11 @@ package ru.unclestalin.rotp_metallica.power.impl.stand.type;
 
 import com.github.standobyte.jojo.init.ModItems;
 import com.github.standobyte.jojo.init.ModStatusEffects;
+import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
+import com.github.standobyte.jojo.power.IPower;
+import com.github.standobyte.jojo.power.impl.PowerBaseImpl;
+import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
+import com.github.standobyte.jojo.power.impl.nonstand.NonStandPower;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.power.impl.stand.stats.StandStats;
 import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType;
@@ -14,6 +19,7 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.vector.Vector3d;
@@ -52,11 +58,20 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
 
     @Override
     public void tickUser(LivingEntity user, IStandPower power) {
+        user.setInvisible(user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()));
         if (user.isAlive() && user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get())) {
             power.consumeStamina(4.5F, true);
             if (power.getStamina() <= 0F || !power.isActive())
                 user.removeEffect(ModStatusEffects.FULL_INVISIBILITY.get());
+            INonStandPower.getNonStandPowerOptional(user).ifPresent(vampirePower -> {
+                if (vampirePower.getType() == ModPowers.VAMPIRISM.get() && user.hasEffect(ModStatusEffects.VAMPIRE_SUN_BURN.get())) {
+                    user.addEffect(new EffectInstance(ModStatusEffects.SUN_RESISTANCE.get(), 999999, 999999, false, false, false));
+                    user.removeEffect(ModStatusEffects.VAMPIRE_SUN_BURN.get());
+                }
+            });
         }
+        if (user.isAlive() && !user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()) && user.hasEffect(ModStatusEffects.SUN_RESISTANCE.get()))
+            user.removeEffect(ModStatusEffects.SUN_RESISTANCE.get());
         if (power.isActive())
             pullIron(user.level, user);
         if (!user.level.isClientSide() && power.isActive()) {
