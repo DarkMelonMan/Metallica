@@ -21,6 +21,7 @@ public class MultipleKnivesThrow extends StandEntityAction {
             for (int i = 0; i < 5; i++) {
                 KnifeEntity knife = new KnifeEntity(world, user);
                 knife.pickup = AbstractArrowEntity.PickupStatus.DISALLOWED;
+                knive.setKnifeType(KniveEntity.TexVariant.SCALPEL);
                 knife.setTimeStopFlightTicks(5);
                 knife.shootFromRotation(user, 3F,1.0F + i % 3);
                 world.addFreshEntity(knife);
