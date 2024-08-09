@@ -3,10 +3,7 @@ package ru.unclestalin.rotp_metallica.power.impl.stand.type;
 import com.github.standobyte.jojo.init.ModItems;
 import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
-import com.github.standobyte.jojo.power.IPower;
-import com.github.standobyte.jojo.power.impl.PowerBaseImpl;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
-import com.github.standobyte.jojo.power.impl.nonstand.NonStandPower;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.power.impl.stand.stats.StandStats;
 import com.github.standobyte.jojo.power.impl.stand.type.EntityStandType;
@@ -16,20 +13,26 @@ import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.CompassItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTDynamicOps;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Hand;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
+import ru.unclestalin.rotp_metallica.RotpMetallicaAddon;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class MetallicaStandType<T extends StandStats> extends EntityStandType<T> {
     protected MetallicaStandType(AbstractBuilder<?, T> builder) {
@@ -37,24 +40,7 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
     }
 
     private static final Random random = new Random();
-
-    private static final List<Item> ironItems = new ArrayList<>(Arrays.asList(Items.IRON_NUGGET, Items.IRON_INGOT,
-            Items.IRON_ORE, Items.COMPASS, Items.CHAIN, Items.CAULDRON, Items.HOPPER, Items.MINECART,
-            Items.HOPPER_MINECART, Items.CHEST_MINECART, Items.FURNACE_MINECART, Items.TNT_MINECART,
-            Items.COMMAND_BLOCK_MINECART, Items.IRON_DOOR, Items.IRON_TRAPDOOR, Items.IRON_HORSE_ARMOR,
-            Items.LANTERN, Items.IRON_BLOCK, Items.ANVIL, Items.CHIPPED_ANVIL, Items.DAMAGED_ANVIL,
-            Items.STONECUTTER, Items.BLAST_FURNACE, Items.PISTON, Items.GRINDSTONE, Items.SMITHING_TABLE,
-            Items.HEAVY_WEIGHTED_PRESSURE_PLATE, Items.TRIPWIRE_HOOK, Items.BUCKET, Items.WATER_BUCKET, Items.LAVA_BUCKET,
-            Items.COD_BUCKET, Items.MILK_BUCKET, Items.PUFFERFISH_BUCKET, Items.SALMON_BUCKET, Items.TROPICAL_FISH_BUCKET,
-            Items.RAIL, Items.ACTIVATOR_RAIL, Items.DETECTOR_RAIL, Items.POWERED_RAIL, ModItems.KNIFE.get(),
-            ModItems.METEORIC_INGOT.get(), ModItems.METEORIC_IRON.get(), ModItems.METEORIC_SCRAP.get(),
-            ModItems.CLACKERS.get(), ModItems.ROAD_ROLLER.get(), ModItems.WALKMAN.get(), ModItems.BREATH_CONTROL_MASK.get(),
-            ModItems.CASSETTE_BLANK.get(), ModItems.CASSETTE_RECORDED.get(), Items.IRON_SWORD, Items.IRON_AXE,
-            Items.IRON_SHOVEL, Items.SHEARS, Items.IRON_HOE, Items.IRON_PICKAXE, ModItems.BLADE_HAT.get(),
-            ModItems.IRON_SLEDGEHAMMER.get(), ModItems.STAND_ARROW.get(), ModItems.STAND_ARROW_BEETLE.get(),
-            Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS, Items.CHAINMAIL_HELMET,
-            Items.CHAINMAIL_CHESTPLATE, Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS, Items.SHIELD, Items.FLINT_AND_STEEL,
-            Items.CROSSBOW));
+    private List<CompassData> compassDataList = new ArrayList<>();
 
     @Override
     public void tickUser(LivingEntity user, IStandPower power) {
@@ -70,10 +56,37 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
                 }
             });
         }
-        if (user.isAlive() && !user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()) && user.hasEffect(ModStatusEffects.SUN_RESISTANCE.get()))
+        if (user.isAlive() && !user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()) && user.hasEffect(ModStatusEffects.SUN_RESISTANCE.get())) {
             user.removeEffect(ModStatusEffects.SUN_RESISTANCE.get());
-        if (power.isActive())
+        }
+        if (power.isActive()) {
             pullIron(user.level, user);
+        }
+        trackByCompass((PlayerEntity) user, power);
+        RotpMetallicaAddon.getLogger().info(compassDataList.size());
+        int i = 0;
+        while (compassDataList.size() > i) {
+            CompassData compassData = compassDataList.get(i);
+            if (user.level.isClientSide()) {
+                RotpMetallicaAddon.getLogger().info(compassData.compassItems);
+                RotpMetallicaAddon.getLogger().info("Has tag:");
+                RotpMetallicaAddon.getLogger().info(compassData.compassItems.hasTag());
+                if (compassData.compassItems.hasTag()) {
+                    RotpMetallicaAddon.getLogger().info("Tag:");
+                    RotpMetallicaAddon.getLogger().info(compassData.compassItems.getOrCreateTag().getAsString());
+                }
+                RotpMetallicaAddon.getLogger().info("Power is active:");
+                RotpMetallicaAddon.getLogger().info(power.isActive());
+            }
+            double range = getStats().getMaxRange();
+            if (!power.isActive() || user.distanceTo(compassData.owner) > range) {
+                removeLodestoneTags(compassData);
+                RotpMetallicaAddon.getLogger().info("Tag removed from player's compass");
+            } else {
+                RotpMetallicaAddon.getLogger().info("Tag wasn't removed");
+                i++;
+            }
+        }
         if (!user.level.isClientSide() && power.isActive()) {
             World world = user.level;
             double x = user.getX();
@@ -84,45 +97,45 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
             AxisAlignedBB area = new AxisAlignedBB(x - range, y - range, z - range, x + range + 1.0D, y + range, z + range + 1.0D);
             List<LivingEntity> entitiesInRange = world.getEntitiesOfClass(LivingEntity.class, area);
             for (LivingEntity entity : entitiesInRange) {
-                if (entity != user && entity.isAlive()) {
+                if (entity != user && entity.isAlive() && entity.tickCount % 20 == 0) {
                     float randValue = random.nextFloat();
                     if (isIronItem(entity.getMainHandItem())) {
-                        if (randValue > 0.75F && entity.tickCount % 20 == 0) {
+                        if (randValue > 0.75F) {
                             ItemEntity item = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(), entity.getMainHandItem());
                             item.setPickUpDelay(20);
                             world.addFreshEntity(item);
                             entity.setItemInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
                         }
                     } else if (isIronItem(entity.getOffhandItem())) {
-                        if (randValue < 0.15F && entity.tickCount % 20 == 0) {
+                        if (randValue < 0.15F) {
                             ItemEntity item = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(), entity.getOffhandItem());
                             item.setPickUpDelay(20);
                             world.addFreshEntity(item);
                             entity.setItemInHand(Hand.OFF_HAND, ItemStack.EMPTY);
                         }
                     } else if (isIronItem(entity.getItemBySlot(EquipmentSlotType.HEAD))) {
-                        if (randValue > 0.15F && randValue < 0.3F && entity.tickCount % 20 == 0) {
+                        if (randValue > 0.15F && randValue < 0.3F) {
                             ItemEntity item = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(), entity.getItemBySlot(EquipmentSlotType.HEAD));
                             item.setPickUpDelay(20);
                             world.addFreshEntity(item);
                             entity.setItemSlot(EquipmentSlotType.HEAD, ItemStack.EMPTY);
                         }
                     } else if (isIronItem(entity.getItemBySlot(EquipmentSlotType.CHEST))) {
-                        if (randValue > 0.3F && randValue < 0.45F && entity.tickCount % 20 == 0) {
+                        if (randValue > 0.3F && randValue < 0.45F) {
                             ItemEntity item = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(), entity.getItemBySlot(EquipmentSlotType.CHEST));
                             item.setPickUpDelay(20);
                             world.addFreshEntity(item);
                             entity.setItemSlot(EquipmentSlotType.CHEST, ItemStack.EMPTY);
                         }
                     } else if (isIronItem(entity.getItemBySlot(EquipmentSlotType.LEGS))) {
-                        if (randValue > 0.45F && randValue < 0.6F && entity.tickCount % 20 == 0) {
+                        if (randValue > 0.45F && randValue < 0.6F) {
                             ItemEntity item = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(), entity.getItemBySlot(EquipmentSlotType.LEGS));
                             item.setPickUpDelay(20);
                             world.addFreshEntity(item);
                             entity.setItemSlot(EquipmentSlotType.LEGS, ItemStack.EMPTY);
                         }
                     } else if (isIronItem(entity.getItemBySlot(EquipmentSlotType.FEET))) {
-                        if (randValue > 0.6F && randValue < 0.75F && entity.tickCount % 20 == 0) {
+                        if (randValue > 0.6F && randValue < 0.75F) {
                             ItemEntity item = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(), entity.getItemBySlot(EquipmentSlotType.FEET));
                             item.setPickUpDelay(20);
                             world.addFreshEntity(item);
@@ -136,13 +149,89 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
     }
 
     public boolean isIronItem(ItemStack currentItem) {
-        for (Item item : ironItems) {
-            if (ItemStack.isSameIgnoreDurability(currentItem, (item.getDefaultInstance()))) {
-                return true;
+        return currentItem.getItem().getTags().contains(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "iron_items"));
+    }
+
+    private void addLodestoneTags(RegistryKey<World> worldKey, BlockPos blockPos, CompoundNBT nbt) {
+        nbt.put("LodestonePos", NBTUtil.writeBlockPos(blockPos));
+        World.RESOURCE_KEY_CODEC.encodeStart(NBTDynamicOps.INSTANCE, worldKey).resultOrPartial(RotpMetallicaAddon.getLogger()::error).ifPresent((inbt) -> {
+            nbt.put("LodestoneDimension", inbt);
+        });
+        nbt.putBoolean("LodestoneTracked", true);
+    }
+
+    private void trackByCompass(PlayerEntity user, IStandPower power) {
+        if (power.isActive()) {
+            double x = user.getX();
+            double y = user.getY();
+            double z = user.getZ();
+            double range = getStats().getMaxRange();
+            AxisAlignedBB area = new AxisAlignedBB(x - range, y - range, z - range, x + range + 1.0D, y + range, z + range + 1.0D);
+            List<PlayerEntity> playersInRange = user.level.getEntitiesOfClass(PlayerEntity.class, area);
+            for (PlayerEntity player : playersInRange) {
+                if (ItemStack.isSame(player.getMainHandItem(), Items.COMPASS.getDefaultInstance()) // добавить условие другого стэндюзера с металликой
+                        || ItemStack.isSame(player.getOffhandItem(), Items.COMPASS.getDefaultInstance())) {
+                    ItemStack itemstack = ItemStack.isSame(player.getMainHandItem(), Items.COMPASS.getDefaultInstance()) ? player.getMainHandItem() : player.getOffhandItem();
+//                if (Math.sqrt(NBTUtil.readBlockPos(itemstack.getOrCreateTag().getCompound("LodestonePos")).distSqr(x, y, z, false)) > range){
+//                    prevNBT = itemstack.getOrCreateTag();
+//                    previousCompassNBTTag = prevNBT;
+//                }
+                    if (player.inventory.items.stream().noneMatch((item) ->
+                            (ItemStack.isSame(item, Items.COMPASS.getDefaultInstance()) && item.hasFoil())
+                                    && item != player.getMainHandItem() && item != player.getOffhandItem())) {
+                        boolean flag = false;
+                        if (!player.abilities.instabuild && itemstack.getCount() == 1) {
+                            CompassData data = new CompassData(player, itemstack);
+                            if (!compassDataList.contains(data) && !itemstack.hasTag())
+                                flag = true;
+                            this.addLodestoneTags(user.level.dimension(), new BlockPos(user.position()), itemstack.getOrCreateTag());
+                            if (flag) {
+                                compassDataList.add(data);
+                                RotpMetallicaAddon.getLogger().info("Compass tag added");
+                            }
+                        } else {
+                            ItemStack itemstack1 = new ItemStack(Items.COMPASS, 1);
+                            CompoundNBT compoundnbt = itemstack.hasTag() ? itemstack.getTag().copy() : new CompoundNBT();
+                            itemstack1.setTag(compoundnbt);
+                            if (!player.abilities.instabuild) {
+                                itemstack.shrink(1);
+                            }
+                            this.addLodestoneTags(user.level.dimension(), new BlockPos(user.position()), compoundnbt);
+                            if (!player.inventory.add(itemstack1)) {
+                                player.drop(itemstack1, false);
+                            }
+                            compassDataList.add(new CompassData(player, itemstack1));
+                            RotpMetallicaAddon.getLogger().info("Compass tag added");
+                        }
+                    }
+                }
             }
         }
-        return false;
+    }
 
+    private void removeLodestoneTags(CompassData data) {
+        PlayerEntity owner = data.owner;
+        ItemStack itemStack = data.compassItems;
+        RotpMetallicaAddon.getLogger().info("Owner has compass items:");
+        RotpMetallicaAddon.getLogger().info(owner.inventory.items.contains(itemStack));
+        if (owner.inventory.items.contains(itemStack)) {
+            itemStack.shrink(1);
+            ItemStack itemStack1 = new ItemStack(Items.COMPASS, 1);
+            if (!owner.inventory.add(itemStack1)) {
+                owner.drop(itemStack1, false);
+            }
+            RotpMetallicaAddon.getLogger().info("Compass tag removed");
+        }
+        compassDataList.remove(data);
+//        double x = user.getX();
+//        double y = user.getY();
+//        double z = user.getZ();
+//        double range = getStats().getMaxRange() * 1.5;
+//        AxisAlignedBB area = new AxisAlignedBB(x - range, y - range, z - range, x + range + 1.0D, y + range, z + range + 1.0D);
+//        List<PlayerEntity> playersInRange = user.level.getEntitiesOfClass(PlayerEntity.class, area);
+//        for (PlayerEntity player : playersInRange) {
+//            if (player)
+//        }
     }
 
     public void pullIron(World worldIn, @Nonnull Entity entityIn) {
@@ -201,3 +290,14 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
 
     }
 }
+
+class CompassData {
+    PlayerEntity owner;
+    ItemStack compassItems;
+
+    CompassData(PlayerEntity owner, ItemStack compassItems) {
+        this.owner = owner;
+        this.compassItems = compassItems;
+    }
+}
+
