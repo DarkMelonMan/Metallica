@@ -30,6 +30,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import ru.unclestalin.rotp_metallica.RotpMetallicaAddon;
+import ru.unclestalin.rotp_metallica.util.IronTag;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -149,7 +150,7 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
     }
 
     public boolean isIronItem(ItemStack currentItem) {
-        return currentItem.getItem().getTags().contains(new ResourceLocation(RotpMetallicaAddon.MOD_ID, "iron_items"));
+        return currentItem.getItem().is(IronTag.Items.IRON_ITEMS);
     }
 
     private void addLodestoneTags(RegistryKey<World> worldKey, BlockPos blockPos, CompoundNBT nbt) {
