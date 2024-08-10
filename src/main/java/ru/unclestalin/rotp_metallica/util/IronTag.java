@@ -2,6 +2,7 @@ package ru.unclestalin.rotp_metallica.util;
 
 import net.minecraft.tags.ItemTags;
 import net.minecraft.item.Item;
+import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.Tags;
 import ru.unclestalin.rotp_metallica.RotpMetallicaAddon;

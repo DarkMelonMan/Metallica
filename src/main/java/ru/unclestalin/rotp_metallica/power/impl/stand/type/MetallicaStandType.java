@@ -260,7 +260,7 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
                             playerIn.playerTouch(playerIn);
                     }
                 }
-            }
+            } // maybe add pulling iron golems
             List<AbstractMinecartEntity> minecarts = worldIn.getEntitiesOfClass(AbstractMinecartEntity.class, area);
             if (minecarts.size() != 0) {
                 for (AbstractMinecartEntity minecart : minecarts) {
