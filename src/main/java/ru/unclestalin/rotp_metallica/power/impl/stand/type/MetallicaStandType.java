@@ -1,6 +1,5 @@
 package ru.unclestalin.rotp_metallica.power.impl.stand.type;
 
-import com.github.standobyte.jojo.init.ModItems;
 import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.init.power.non_stand.ModPowers;
 import com.github.standobyte.jojo.power.impl.nonstand.INonStandPower;
@@ -13,24 +12,22 @@ import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.CompassItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.potion.EffectInstance;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Hand;
 import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import ru.unclestalin.rotp_metallica.RotpMetallicaAddon;
-import ru.unclestalin.rotp_metallica.util.IronTag;
+import ru.unclestalin.rotp_metallica.entity.stand.stands.MetallicaStandEntity;
+import ru.unclestalin.rotp_metallica.init.InitStands;
+import ru.unclestalin.rotp_metallica.util.ModTags;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -64,27 +61,13 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
             pullIron(user.level, user);
         }
         trackByCompass((PlayerEntity) user, power);
-        RotpMetallicaAddon.getLogger().info(compassDataList.size());
         int i = 0;
         while (compassDataList.size() > i) {
             CompassData compassData = compassDataList.get(i);
-            if (user.level.isClientSide()) {
-                RotpMetallicaAddon.getLogger().info(compassData.compassItems);
-                RotpMetallicaAddon.getLogger().info("Has tag:");
-                RotpMetallicaAddon.getLogger().info(compassData.compassItems.hasTag());
-                if (compassData.compassItems.hasTag()) {
-                    RotpMetallicaAddon.getLogger().info("Tag:");
-                    RotpMetallicaAddon.getLogger().info(compassData.compassItems.getOrCreateTag().getAsString());
-                }
-                RotpMetallicaAddon.getLogger().info("Power is active:");
-                RotpMetallicaAddon.getLogger().info(power.isActive());
-            }
             double range = getStats().getMaxRange();
             if (!power.isActive() || user.distanceTo(compassData.owner) > range) {
                 removeLodestoneTags(compassData);
-                RotpMetallicaAddon.getLogger().info("Tag removed from player's compass");
             } else {
-                RotpMetallicaAddon.getLogger().info("Tag wasn't removed");
                 i++;
             }
         }
@@ -150,7 +133,7 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
     }
 
     public boolean isIronItem(ItemStack currentItem) {
-        return currentItem.getItem().is(IronTag.Items.IRON_ITEMS);
+        return currentItem.getItem().is(ModTags.Items.IRON_ITEMS);
     }
 
     private void addLodestoneTags(RegistryKey<World> worldKey, BlockPos blockPos, CompoundNBT nbt) {
@@ -161,6 +144,8 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
         nbt.putBoolean("LodestoneTracked", true);
     }
 
+    boolean standFlag = false;
+
     private void trackByCompass(PlayerEntity user, IStandPower power) {
         if (power.isActive()) {
             double x = user.getX();
@@ -170,39 +155,34 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
             AxisAlignedBB area = new AxisAlignedBB(x - range, y - range, z - range, x + range + 1.0D, y + range, z + range + 1.0D);
             List<PlayerEntity> playersInRange = user.level.getEntitiesOfClass(PlayerEntity.class, area);
             for (PlayerEntity player : playersInRange) {
-                if (ItemStack.isSame(player.getMainHandItem(), Items.COMPASS.getDefaultInstance()) // добавить условие другого стэндюзера с металликой
-                        || ItemStack.isSame(player.getOffhandItem(), Items.COMPASS.getDefaultInstance())) {
-                    ItemStack itemstack = ItemStack.isSame(player.getMainHandItem(), Items.COMPASS.getDefaultInstance()) ? player.getMainHandItem() : player.getOffhandItem();
-//                if (Math.sqrt(NBTUtil.readBlockPos(itemstack.getOrCreateTag().getCompound("LodestonePos")).distSqr(x, y, z, false)) > range){
-//                    prevNBT = itemstack.getOrCreateTag();
-//                    previousCompassNBTTag = prevNBT;
-//                }
+                IStandPower.getStandPowerOptional(player).ifPresent(stand -> {
+                    if (stand.getType() == InitStands.METALLICA_STAND.getStandType())
+                        standFlag = true;
+                });
+                if (standFlag)
+                    continue;
+                if (ItemStack.isSame(player.getMainHandItem(), new ItemStack(Items.COMPASS, player.getMainHandItem().getCount()))
+                        || ItemStack.isSame(player.getOffhandItem(), new ItemStack(Items.COMPASS, player.getOffhandItem().getCount()))) {
+                    ItemStack itemstack = ItemStack.isSame(player.getMainHandItem(), new ItemStack(Items.COMPASS, player.getMainHandItem().getCount())) ? player.getMainHandItem() : player.getOffhandItem();
                     if (player.inventory.items.stream().noneMatch((item) ->
-                            (ItemStack.isSame(item, Items.COMPASS.getDefaultInstance()) && item.hasFoil())
+                            (ItemStack.isSame(item, new ItemStack(Items.COMPASS, item.getCount())) && item.hasFoil())
                                     && item != player.getMainHandItem() && item != player.getOffhandItem())) {
                         boolean flag = false;
-                        if (!player.abilities.instabuild && itemstack.getCount() == 1) {
-                            CompassData data = new CompassData(player, itemstack);
-                            if (!compassDataList.contains(data) && !itemstack.hasTag())
-                                flag = true;
-                            this.addLodestoneTags(user.level.dimension(), new BlockPos(user.position()), itemstack.getOrCreateTag());
-                            if (flag) {
-                                compassDataList.add(data);
-                                RotpMetallicaAddon.getLogger().info("Compass tag added");
+                        CompassData data = new CompassData(player, itemstack);
+                        if (!compassDataList.contains(data) && !itemstack.hasTag())
+                            flag = true;
+                        AxisAlignedBB playerArea = new AxisAlignedBB(player.getX() - range, player.getY() - range, player.getZ() - range, player.getX() + range + 1.0D, player.getY() + range, player.getZ() + range + 1.0D);
+                        List<MetallicaStandEntity> metallicaStands = player.level.getEntitiesOfClass(MetallicaStandEntity.class, playerArea);
+                        MetallicaStandEntity nearestMetallicaStand = (MetallicaStandEntity) power;
+                        if (metallicaStands.size() > 1) {
+                            for (MetallicaStandEntity metallica : metallicaStands) {
+                                if (player.distanceTo(metallica) < player.distanceTo(nearestMetallicaStand))
+                                    nearestMetallicaStand = metallica;
                             }
-                        } else {
-                            ItemStack itemstack1 = new ItemStack(Items.COMPASS, 1);
-                            CompoundNBT compoundnbt = itemstack.hasTag() ? itemstack.getTag().copy() : new CompoundNBT();
-                            itemstack1.setTag(compoundnbt);
-                            if (!player.abilities.instabuild) {
-                                itemstack.shrink(1);
-                            }
-                            this.addLodestoneTags(user.level.dimension(), new BlockPos(user.position()), compoundnbt);
-                            if (!player.inventory.add(itemstack1)) {
-                                player.drop(itemstack1, false);
-                            }
-                            compassDataList.add(new CompassData(player, itemstack1));
-                            RotpMetallicaAddon.getLogger().info("Compass tag added");
+                        }
+                        this.addLodestoneTags(user.level.dimension(), new BlockPos(nearestMetallicaStand.position()), itemstack.getOrCreateTag());
+                        if (flag) {
+                            compassDataList.add(data);
                         }
                     }
                 }
@@ -213,26 +193,15 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
     private void removeLodestoneTags(CompassData data) {
         PlayerEntity owner = data.owner;
         ItemStack itemStack = data.compassItems;
-        RotpMetallicaAddon.getLogger().info("Owner has compass items:");
-        RotpMetallicaAddon.getLogger().info(owner.inventory.items.contains(itemStack));
-        if (owner.inventory.items.contains(itemStack)) {
-            itemStack.shrink(1);
-            ItemStack itemStack1 = new ItemStack(Items.COMPASS, 1);
+        if (owner.inventory.items.contains(itemStack) || owner.getOffhandItem().sameItem(itemStack)) {
+            int count = itemStack.getCount();
+            itemStack.shrink(count);
+            ItemStack itemStack1 = new ItemStack(Items.COMPASS, count);
             if (!owner.inventory.add(itemStack1)) {
                 owner.drop(itemStack1, false);
             }
-            RotpMetallicaAddon.getLogger().info("Compass tag removed");
         }
         compassDataList.remove(data);
-//        double x = user.getX();
-//        double y = user.getY();
-//        double z = user.getZ();
-//        double range = getStats().getMaxRange() * 1.5;
-//        AxisAlignedBB area = new AxisAlignedBB(x - range, y - range, z - range, x + range + 1.0D, y + range, z + range + 1.0D);
-//        List<PlayerEntity> playersInRange = user.level.getEntitiesOfClass(PlayerEntity.class, area);
-//        for (PlayerEntity player : playersInRange) {
-//            if (player)
-//        }
     }
 
     public void pullIron(World worldIn, @Nonnull Entity entityIn) {
