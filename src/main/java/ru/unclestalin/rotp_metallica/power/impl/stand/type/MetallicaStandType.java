@@ -18,6 +18,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.Hand;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -42,11 +43,10 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
 
     @Override
     public void tickUser(LivingEntity user, IStandPower power) {
-        user.setInvisible(user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()));
-        if (user.isAlive() && user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get())) {
+        if (user.isAlive() && user.hasEffect(Effects.INVISIBILITY.getEffect())) {
             power.consumeStamina(4.5F, true);
             if (power.getStamina() <= 0F || !power.isActive())
-                user.removeEffect(ModStatusEffects.FULL_INVISIBILITY.get());
+                user.removeEffect(Effects.INVISIBILITY.getEffect());
             INonStandPower.getNonStandPowerOptional(user).ifPresent(vampirePower -> {
                 if (vampirePower.getType() == ModPowers.VAMPIRISM.get() && user.hasEffect(ModStatusEffects.VAMPIRE_SUN_BURN.get())) {
                     user.addEffect(new EffectInstance(ModStatusEffects.SUN_RESISTANCE.get(), 999999, 999999, false, false, false));
@@ -54,7 +54,7 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
                 }
             });
         }
-        if (user.isAlive() && !user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()) && user.hasEffect(ModStatusEffects.SUN_RESISTANCE.get())) {
+        if (user.isAlive() && !user.hasEffect(Effects.INVISIBILITY.getEffect()) && user.hasEffect(ModStatusEffects.SUN_RESISTANCE.get())) {
             user.removeEffect(ModStatusEffects.SUN_RESISTANCE.get());
         }
         if (power.isActive()) {
@@ -138,14 +138,9 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
 
     private void addLodestoneTags(RegistryKey<World> worldKey, BlockPos blockPos, CompoundNBT nbt) {
         nbt.put("LodestonePos", NBTUtil.writeBlockPos(blockPos));
-        World.RESOURCE_KEY_CODEC.encodeStart(NBTDynamicOps.INSTANCE, worldKey).resultOrPartial(RotpMetallicaAddon.getLogger()::error).ifPresent((inbt) -> {
-            nbt.put("LodestoneDimension", inbt);
-        });
+        World.RESOURCE_KEY_CODEC.encodeStart(NBTDynamicOps.INSTANCE, worldKey).resultOrPartial(RotpMetallicaAddon.getLogger()::error).ifPresent((inbt) -> nbt.put("LodestoneDimension", inbt));
         nbt.putBoolean("LodestoneTracked", true);
     }
-
-    boolean standFlag = false;
-
     private void trackByCompass(PlayerEntity user, IStandPower power) {
         if (power.isActive()) {
             double x = user.getX();
@@ -155,35 +150,41 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
             AxisAlignedBB area = new AxisAlignedBB(x - range, y - range, z - range, x + range + 1.0D, y + range, z + range + 1.0D);
             List<PlayerEntity> playersInRange = user.level.getEntitiesOfClass(PlayerEntity.class, area);
             for (PlayerEntity player : playersInRange) {
-                IStandPower.getStandPowerOptional(player).ifPresent(stand -> {
-                    if (stand.getType() == InitStands.METALLICA_STAND.getStandType())
-                        standFlag = true;
-                });
-                if (standFlag)
+
+                IStandPower playerPower = IStandPower.getStandPowerOptional(player).orElse(null);
+                if (playerPower.getType() == InitStands.METALLICA_STAND.getStandType())
                     continue;
+
+                AxisAlignedBB playerArea = new AxisAlignedBB(player.getX() - range, player.getY() - range, player.getZ() - range, player.getX() + range + 1.0D, player.getY() + range, player.getZ() + range + 1.0D);
+                List<MetallicaStandEntity> metallicaStands = player.level.getEntitiesOfClass(MetallicaStandEntity.class, playerArea);
+                boolean needsToBeTracked = true;
+                if (metallicaStands.size() > 1) {
+                    for (MetallicaStandEntity metallica : metallicaStands) {
+                        if (player.distanceTo(metallica.getUser()) < player.distanceTo(user)) {
+                            needsToBeTracked = false;
+                            break;
+                        }
+                    }
+                }
+
                 if (ItemStack.isSame(player.getMainHandItem(), new ItemStack(Items.COMPASS, player.getMainHandItem().getCount()))
                         || ItemStack.isSame(player.getOffhandItem(), new ItemStack(Items.COMPASS, player.getOffhandItem().getCount()))) {
                     ItemStack itemstack = ItemStack.isSame(player.getMainHandItem(), new ItemStack(Items.COMPASS, player.getMainHandItem().getCount())) ? player.getMainHandItem() : player.getOffhandItem();
                     if (player.inventory.items.stream().noneMatch((item) ->
                             (ItemStack.isSame(item, new ItemStack(Items.COMPASS, item.getCount())) && item.hasFoil())
                                     && item != player.getMainHandItem() && item != player.getOffhandItem())) {
-                        boolean flag = false;
-                        CompassData data = new CompassData(player, itemstack);
-                        if (!compassDataList.contains(data) && !itemstack.hasTag())
-                            flag = true;
-                        AxisAlignedBB playerArea = new AxisAlignedBB(player.getX() - range, player.getY() - range, player.getZ() - range, player.getX() + range + 1.0D, player.getY() + range, player.getZ() + range + 1.0D);
-                        List<MetallicaStandEntity> metallicaStands = player.level.getEntitiesOfClass(MetallicaStandEntity.class, playerArea);
-                        MetallicaStandEntity nearestMetallicaStand = (MetallicaStandEntity) power;
-                        if (metallicaStands.size() > 1) {
-                            for (MetallicaStandEntity metallica : metallicaStands) {
-                                if (player.distanceTo(metallica) < player.distanceTo(nearestMetallicaStand))
-                                    nearestMetallicaStand = metallica;
-                            }
-                        }
-                        this.addLodestoneTags(user.level.dimension(), new BlockPos(nearestMetallicaStand.position()), itemstack.getOrCreateTag());
-                        if (flag) {
-                            compassDataList.add(data);
-                        }
+
+                        if (needsToBeTracked) {
+                            RotpMetallicaAddon.getLogger().info("YES! I AM!");
+                            boolean flag = false;
+                            CompassData data = new CompassData(player, itemstack);
+                            if (!compassDataList.contains(data) && !itemstack.hasTag())
+                                flag = true;
+                            this.addLodestoneTags(user.level.dimension(), new BlockPos(user.position()), itemstack.getOrCreateTag());
+                            if (flag)
+                                compassDataList.add(data);
+                        } else
+                            RotpMetallicaAddon.getLogger().info("NOT AM I!");
                     }
                 }
             }
@@ -229,18 +230,16 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
                             playerIn.playerTouch(playerIn);
                     }
                 }
-            } // maybe add pulling iron golems
+            } // maybe add pulling iron from iron golems
             List<AbstractMinecartEntity> minecarts = worldIn.getEntitiesOfClass(AbstractMinecartEntity.class, area);
-            if (minecarts.size() != 0) {
-                for (AbstractMinecartEntity minecart : minecarts) {
-                    if (!minecart.getPassengers().contains(playerIn) && minecart.isAlive()) {
-                        double distance = minecart.distanceTo(playerIn);
-                        Vector3d vec = playerIn.position().subtract(minecart.getBoundingBox().getCenter())
-                                .normalize().scale(0.15);
-                        minecart.setDeltaMovement(distance > 2 ?
-                                minecart.getDeltaMovement().add(vec.scale(1 / distance))
-                                : vec.scale(Math.max(distance - 1, 0)));
-                    }
+            for (AbstractMinecartEntity minecart : minecarts) {
+                if (!minecart.getPassengers().contains(playerIn) && minecart.isAlive()) {
+                    double distance = minecart.distanceTo(playerIn);
+                    Vector3d vec = playerIn.position().subtract(minecart.getBoundingBox().getCenter())
+                            .normalize().scale(0.15);
+                    minecart.setDeltaMovement(distance > 2 ?
+                            minecart.getDeltaMovement().add(vec.scale(1 / distance))
+                            : vec.scale(Math.max(distance - 1, 0)));
                 }
             }
         }

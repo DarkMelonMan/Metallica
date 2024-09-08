@@ -1,6 +1,10 @@
 package ru.unclestalin.rotp_metallica.client;
 
+import com.github.standobyte.jojo.capability.entity.EntityUtilCapProvider;
 import com.github.standobyte.jojo.init.ModStatusEffects;
+import com.github.standobyte.jojo.power.impl.nonstand.type.NonStandPowerType;
+import com.github.standobyte.jojo.power.impl.nonstand.type.hamon.HamonPowerType;
+import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.util.mc.MCUtil;
 import com.github.standobyte.jojo.util.mc.reflection.ClientReflection;
 import com.google.common.base.MoreObjects;
@@ -11,19 +15,30 @@ import net.minecraft.client.renderer.FirstPersonRenderer;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.Timer;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import ru.unclestalin.rotp_metallica.RotpMetallicaAddon;
 import ru.unclestalin.rotp_metallica.client.render.entity.layerrenderer.LackOfIronLayer;
+import ru.unclestalin.rotp_metallica.entity.stand.stands.MetallicaStandEntity;
 import ru.unclestalin.rotp_metallica.init.InitEffects;
+import ru.unclestalin.rotp_metallica.init.InitStands;
+
+import java.util.List;
+import java.util.OptionalInt;
 
 public class ClientEventHandler {
     private static ClientEventHandler instance = null;
@@ -41,14 +56,6 @@ public class ClientEventHandler {
         if (instance == null) {
             instance = new ClientEventHandler(mc);
             MinecraftForge.EVENT_BUS.register(instance);
-        }
-    }
-
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public <T extends LivingEntity, M extends EntityModel<T>> void onRenderLiving(RenderLivingEvent.Pre<T, M> event) {
-        LivingEntity entity = event.getEntity();
-        if (entity.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get())) {
-            event.getRenderer().getDispatcher().setRenderShadow(false);
         }
     }
 
