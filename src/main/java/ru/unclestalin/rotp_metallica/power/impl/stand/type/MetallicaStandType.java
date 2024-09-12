@@ -44,7 +44,7 @@ public class MetallicaStandType<T extends StandStats> extends EntityStandType<T>
     @Override
     public void tickUser(LivingEntity user, IStandPower power) {
         if (user.isAlive() && user.hasEffect(Effects.INVISIBILITY.getEffect())) {
-            power.consumeStamina(4.5F, true);
+            power.consumeStamina(6F, true);
             if (power.getStamina() <= 0F || !power.isActive())
                 user.removeEffect(Effects.INVISIBILITY.getEffect());
             INonStandPower.getNonStandPowerOptional(user).ifPresent(vampirePower -> {
