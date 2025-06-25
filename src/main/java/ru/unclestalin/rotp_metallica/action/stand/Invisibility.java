@@ -7,7 +7,9 @@ import com.github.standobyte.jojo.init.ModStatusEffects;
 import com.github.standobyte.jojo.power.impl.stand.IStandPower;
 import com.github.standobyte.jojo.util.general.LazySupplier;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.IFormattableTextComponent;
@@ -30,19 +32,19 @@ public class Invisibility extends StandEntityAction {
         public void standPerform (World world, StandEntity standEntity, IStandPower userPower, StandEntityTask task){
             if (!world.isClientSide()) {
                 LivingEntity user = userPower.getUser();
-                if (!user.hasEffect(ModStatusEffects.FULL_INVISIBILITY.get())) {
-                    user.addEffect(new EffectInstance(ModStatusEffects.FULL_INVISIBILITY.get(), 99999999, 999999, false, false, false));
+                if (!user.hasEffect(Effects.INVISIBILITY)) {
+                    user.addEffect(new EffectInstance(Effects.INVISIBILITY.getEffect(), 99999999, 999999, false, false, false));
                 } else {
-                    user.removeEffect(ModStatusEffects.FULL_INVISIBILITY.get());
+                    user.removeEffect(Effects.INVISIBILITY.getEffect());
                 }
             }
         }
 
     @Override
     protected void playSoundAtStand(World world, StandEntity standEntity, SoundEvent sound, IStandPower standPower, Phase phase) {
-        if (world.isClientSide() && phase == Phase.WINDUP && (sound == InitSounds.INVISIBILITY_ON.get() || sound == InitSounds.USER_INVISIBILITY.get()) && !standPower.getUser().hasEffect(ModStatusEffects.FULL_INVISIBILITY.get())) {
+        if (world.isClientSide() && phase == Phase.WINDUP && (sound == InitSounds.INVISIBILITY_ON.get() || sound == InitSounds.USER_INVISIBILITY.get()) && !standPower.getUser().hasEffect(Effects.INVISIBILITY.getEffect())) {
             super.playSoundAtStand(world, standEntity, sound, standPower, phase);
-        } else if (world.isClientSide && phase == Phase.WINDUP && sound == InitSounds.INVISIBILITY_OFF.get() && standPower.getUser().hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()))
+        } else if (world.isClientSide && phase == Phase.WINDUP && sound == InitSounds.INVISIBILITY_OFF.get() && standPower.getUser().hasEffect(Effects.INVISIBILITY.getEffect()))
             super.playSoundAtStand(world, standEntity, sound, standPower, phase);
     }
 
@@ -51,6 +53,6 @@ public class Invisibility extends StandEntityAction {
         }
 
         public ResourceLocation getIconTexturePath (@Nullable IStandPower power){
-            return power != null && power.getUser().hasEffect(ModStatusEffects.FULL_INVISIBILITY.get()) ? (ResourceLocation) this.disableTex.get() : super.getIconTexturePath(power);
+            return power != null && power.getUser().hasEffect(Effects.INVISIBILITY.getEffect()) ? (ResourceLocation) this.disableTex.get() : super.getIconTexturePath(power);
         }
 }
